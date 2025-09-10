@@ -86,36 +86,38 @@ local function getinplotposinworldspace(vec)
     print("getinplotposinworldspace vec1:",vec1)
     return vec1
 end
---simulate rotation presses
-    local function rotate90onR() keypress(82) keyrelease(82) end -- Global X
-    local function rotate90onT() keypress(84) keyrelease(84) end -- Global Y
-    local function rotate90onZ() keypress(90) keyrelease(90) end -- Global Z
--- Round both current and target to nearest 90
-    local function roundTo90(angle)
-        return math.floor((angle % 360 + 45) / 90) % 4
-    end
-local function rotateblockto(block: Model, targetRot: Vector3)
+-- Rotate functions (forward 90° each call)
+local function rotate90onR() keypress(82) keyrelease(82) end -- Global X
+local function rotate90onT() keypress(84) keyrelease(84) end -- Global Y
+local function rotate90onZ() keypress(90) keyrelease(90) end -- Global Z
 
-    -- Get current rotation of the model (assumes block.PrimaryPart is set)
-    local currentCF = block:GetPivot()
-    local _, currentRotY, _ = currentCF:ToEulerAnglesYXZ()
-    local x, y, z = currentCF:ToOrientation()
-    
+-- Round angle to nearest 90° step, returns 0..3
+local function roundTo90(angle)
+    local a = (angle % 360 + 0.1) -- small epsilon to fix floating point errors
+    return math.floor((a + 45) / 90) % 4
+end
+
+-- Rotate block to target rotation (Vector3 of multiples of 90)
+local function rotateblockto(block: Model, targetRot: Vector3)
+    -- Get current rotation of the model
+    local x, y, z = block:GetPivot():ToOrientation()
     local currentRot = Vector3.new(
         math.deg(x),
         math.deg(y),
         math.deg(z)
     )
 
+    -- Compute number of 90° steps to rotate (always forward)
     local xSteps = (roundTo90(targetRot.X) - roundTo90(currentRot.X)) % 4
     local ySteps = (roundTo90(targetRot.Y) - roundTo90(currentRot.Y)) % 4
     local zSteps = (roundTo90(targetRot.Z) - roundTo90(currentRot.Z)) % 4
 
-    -- Apply rotations in RTZ order (global axis)
-    for _ = 1, xSteps do rotate90onR() end--wait() end
-    for _ = 1, ySteps do rotate90onT() end--wait() end
-    for _ = 1, zSteps do rotate90onZ() end--wait() end
-    return xSteps+ySteps+zSteps
+    -- Apply rotations in RTZ order
+    for _ = 1, xSteps do rotate90onR() end
+    for _ = 1, ySteps do rotate90onT() end
+    for _ = 1, zSteps do rotate90onZ() end
+
+    return xSteps + ySteps + zSteps
 end
 local function buildmode()
     local Event = game:GetService("Players").LocalPlayer.PlayerGui.BuildGui.EnableBuilding
