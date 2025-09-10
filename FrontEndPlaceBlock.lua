@@ -17,7 +17,7 @@ local originalCameraSubject = camera.CameraSubject
 local tempPart -- holds the temporary part
 local guiStates = {}
 
--- Hide PlayerGui
+-- Hide PlayerGui 
 local function hidePlayerGui()
 	guiStates = {} -- reset memory
 	for _, gui in ipairs(playerGui:GetChildren()) do
