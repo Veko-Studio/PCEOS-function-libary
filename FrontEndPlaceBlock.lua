@@ -100,7 +100,7 @@ end
 -- Rotate block to target rotation (Vector3 of multiples of 90)
 local function rotateblockto(block: Model, targetRot: Vector3)
     -- Get current rotation of the model
-    local x, y, z = Vector3.new(0,0,0) --block:GetPivot():ToOrientation()
+    local x, y, z = CFrame.Angles(0,0,0) --block:GetPivot():ToOrientation()
     local currentRot = Vector3.new(
         math.deg(x),
         math.deg(y),
