@@ -90,39 +90,52 @@ end
 local function rotate90onR() keypress(82) keyrelease(82) end -- Global X
 local function rotate90onT() keypress(84) keyrelease(84) end -- Global Y
 local function rotate90onZ() keypress(90) keyrelease(90) end -- Global Z
--- Main rotate function
-local function roundToNearest90(angle)
-    local deg = math.deg(angle)
-    -- Ensure angle is in 0..360
+local function normalizeDeg(rad)
+    local deg = math.deg(rad)
     deg = (deg % 360 + 360) % 360
-    -- Round to nearest 90
-    local rounded = math.floor((deg + 45) / 90) * 90
-    return rounded % 360
+    return deg
 end
 
-local function computeSteps(curr, target)
-    local diff = (target - curr) % 360
-    return math.floor(diff / 90 + 0.5)
+local function roundToNearest90(deg)
+    -- returns 0, 90, 180, or 270
+    return (math.floor((deg + 45) / 90) * 90) % 360
 end
 
+local function computeSteps(currDeg, targetDeg)
+    -- forward 90° steps needed from curr -> target (0..3)
+    local diff = (targetDeg - currDeg) % 360
+    local steps = math.floor(diff / 90 + 0.5)
+    if steps == 0 and diff ~= 0 then
+        steps = 1 -- ensures at least one step if target is slightly over rounding
+    end
+    return steps
+end
+
+-- keypress-based rotation
 local function rotateblockto(block: Model, targetRot: Vector3)
-    local x, y, z = block:GetPivot():ToOrientation()
+    if not block or not block:GetPivot then return 0 end
 
-    local currentRot = Vector3.new(roundToNearest90(x), roundToNearest90(y), roundToNearest90(z))
-    targetRot = Vector3.new(roundToNearest90(math.rad(targetRot.X)),
-                            roundToNearest90(math.rad(targetRot.Y)),
-                            roundToNearest90(math.rad(targetRot.Z)))
+    local rx, ry, rz = block:GetPivot():ToOrientation()
+    local currX = roundToNearest90(normalizeDeg(rx))
+    local currY = roundToNearest90(normalizeDeg(ry))
+    local currZ = roundToNearest90(normalizeDeg(rz))
 
-    local xSteps = computeSteps(currentRot.X, targetRot.X)
-    local ySteps = computeSteps(currentRot.Y, targetRot.Y)
-    local zSteps = computeSteps(currentRot.Z, targetRot.Z)
+    local targetX = roundToNearest90((targetRot.X % 360 + 360) % 360)
+    local targetY = roundToNearest90((targetRot.Y % 360 + 360) % 360)
+    local targetZ = roundToNearest90((targetRot.Z % 360 + 360) % 360)
 
+    local xSteps = computeSteps(currX, targetX)
+    local ySteps = computeSteps(currY, targetY)
+    local zSteps = computeSteps(currZ, targetZ)
+
+    -- Apply rotations in the order your build system expects
     for _ = 1, xSteps do rotate90onR() end
     for _ = 1, ySteps do rotate90onT() end
     for _ = 1, zSteps do rotate90onZ() end
 
     return xSteps + ySteps + zSteps
 end
+
 local function buildmode()
     local Event = game:GetService("Players").LocalPlayer.PlayerGui.BuildGui.EnableBuilding
     Event:Fire()
