@@ -175,11 +175,13 @@ local LocalPlayer = Players.LocalPlayer
 
 lastcall = 1
 storedCalls = {}
-function _G.FrontEndPlaceBlock(id, pos, rot)
+function _G.FrontEndPlaceBlock(id, pos, rot,retrywd32d)
     print("")
     print("")
     print("")
     print("-------------------------")
+	if retrywd32d == nil then retrywd32d = 1 end
+	if retrywd32d == 50 then return end
     local function timed(label, func)
         local start = tick()
         func()
@@ -263,5 +265,5 @@ function _G.FrontEndPlaceBlock(id, pos, rot)
     end)
     print("[PCEOS]FrontEndPlaceBlock() total time including the task.wait()'s:", tick() - totalStart, "seconds")
     print("-------------------------")
-    if #playerAircraft:GetChildren()+1 ~= cc then _G.FrontEndPlaceBlock(id, pos, rot) end
+    if #playerAircraft:GetChildren()+1 ~= cc then _G.FrontEndPlaceBlock(id, pos, rot,retrywd32d+1) end
 end
