@@ -93,14 +93,16 @@ local function rotate90onZ() keypress(90) keyrelease(90) end -- Global Z
 
 -- Round angle to nearest 90° step, returns 0..3
 local function roundTo90(angle)
-    local a = (angle % 360 + 0.1) -- small epsilon to fix floating point errors
+    -- Convert angle to 0–360 range with a small epsilon
+    local a = (angle % 360 + 0.5)  -- 0.5 helps with rounding errors
+    -- Round to nearest multiple of 90, then limit to 0–3
     return math.floor((a + 45) / 90) % 4
 end
 
 -- Rotate block to target rotation (Vector3 of multiples of 90)
 local function rotateblockto(block: Model, targetRot: Vector3)
     -- Get current rotation of the model
-    local x, y, z = 0,0,0 --block:GetPivot():ToOrientation()
+    local x, y, z = block:GetPivot():ToOrientation()
     local currentRot = Vector3.new(
         math.deg(x),
         math.deg(y),
