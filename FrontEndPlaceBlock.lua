@@ -113,7 +113,6 @@ end
 
 -- keypress-based rotation
 local function rotateblockto(block: Model, targetRot: Vector3)
-    if not block or not block:GetPivot then return 0 end
 
     local rx, ry, rz = block:GetPivot():ToOrientation()
     local currX = roundToNearest90(normalizeDeg(rx))
