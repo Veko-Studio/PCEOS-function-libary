@@ -91,28 +91,27 @@ local function rotate90onR() keypress(82) keyrelease(82) end -- Global X
 local function rotate90onT() keypress(84) keyrelease(84) end -- Global Y
 local function rotate90onZ() keypress(90) keyrelease(90) end -- Global Z
 
+-- Helper function, defined once
 local function roundTo90(angle)
-    -- Round to nearest multiple of 90
-    return math.floor(angle / 90 + 0.5)
+    return math.floor((math.deg(angle) + 45) / 90) * 90 -- rounds to nearest 90
 end
 
--- Rotate block to target rotation (Vector3 of multiples of 90)
+local function computeSteps(curr, target)
+    local diff = (target - curr) % 360
+    return math.floor(diff / 90 + 0.5)
+end
+
+-- Main rotate function
 local function rotateblockto(block: Model, targetRot: Vector3)
-    -- Get current rotation of the model
     local x, y, z = block:GetPivot():ToOrientation()
-    local epsilon = 0.1
-	local currentRot = Vector3.new(
-	    roundTo90(math.deg(x) + epsilon),
-		roundTo90(math.deg(y) + epsilon),
-		roundTo90(math.deg(z) + epsilon)
-	)
 
-    -- Compute number of 90° steps to rotate (always forward)
-    local xSteps = (roundTo90(targetRot.X) - roundTo90(currentRot.X)) % 4
-    local ySteps = (roundTo90(targetRot.Y) - roundTo90(currentRot.Y)) % 4
-    local zSteps = (roundTo90(targetRot.Z) - roundTo90(currentRot.Z)) % 4
+    local currentRot = Vector3.new(roundTo90(x), roundTo90(y), roundTo90(z))
+    targetRot = Vector3.new(roundTo90(math.rad(targetRot.X)), roundTo90(math.rad(targetRot.Y)), roundTo90(math.rad(targetRot.Z)))
 
-    -- Apply rotations in RTZ order
+    local xSteps = computeSteps(currentRot.X, targetRot.X)
+    local ySteps = computeSteps(currentRot.Y, targetRot.Y)
+    local zSteps = computeSteps(currentRot.Z, targetRot.Z)
+
     for _ = 1, xSteps do rotate90onR() end
     for _ = 1, ySteps do rotate90onT() end
     for _ = 1, zSteps do rotate90onZ() end
