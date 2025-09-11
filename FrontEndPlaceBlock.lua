@@ -90,49 +90,64 @@ end
 local function rotate90onR() keypress(82) keyrelease(82) end -- Global X
 local function rotate90onT() keypress(84) keyrelease(84) end -- Global Y
 local function rotate90onZ() keypress(90) keyrelease(90) end -- Global Z
+-- Normalize to 0–360
 local function normalizeDeg(rad)
     local deg = math.deg(rad)
-    deg = (deg % 360 + 360) % 360
-    return deg
+    return (deg % 360 + 360) % 360
 end
 
+-- Round to nearest 90
 local function roundToNearest90(deg)
-    -- returns 0, 90, 180, or 270
     return (math.floor((deg + 45) / 90) * 90) % 360
 end
 
+-- Compute shortest step difference (positive = rotate forward)
 local function computeSteps(currDeg, targetDeg)
-    -- forward 90° steps needed from curr -> target (0..3)
     local diff = (targetDeg - currDeg) % 360
-    local steps = math.floor(diff / 90 + 0.5)
-    if steps == 0 and diff ~= 0 then
-        steps = 1 -- ensures at least one step if target is slightly over rounding
+    if diff > 180 then
+        diff = diff - 360
     end
-    return steps
+    return diff / 90
 end
 
--- keypress-based rotation
+-- Keypress-based rotation
 local function rotateblockto(block: Model, targetRot: Vector3)
-
     local rx, ry, rz = block:GetPivot():ToOrientation()
+
     local currX = roundToNearest90(normalizeDeg(rx))
     local currY = roundToNearest90(normalizeDeg(ry))
     local currZ = roundToNearest90(normalizeDeg(rz))
 
-    local targetX = roundToNearest90((targetRot.X % 360 + 360) % 360)
-    local targetY = roundToNearest90((targetRot.Y % 360 + 360) % 360)
-    local targetZ = roundToNearest90((targetRot.Z % 360 + 360) % 360)
+    local targetX = roundToNearest90(normalizeDeg(targetRot.X))
+    local targetY = roundToNearest90(normalizeDeg(targetRot.Y))
+    local targetZ = roundToNearest90(normalizeDeg(targetRot.Z))
 
     local xSteps = computeSteps(currX, targetX)
     local ySteps = computeSteps(currY, targetY)
     local zSteps = computeSteps(currZ, targetZ)
 
-    -- Apply rotations in the order your build system expects
-    for _ = 1, xSteps do rotate90onR() end
-    for _ = 1, ySteps do rotate90onT() end
-    for _ = 1, zSteps do rotate90onZ() end
+    -- Apply X rotation
+    if xSteps > 0 then
+        for _ = 1, xSteps do rotate90onR() end
+    elseif xSteps < 0 then
+        for _ = 1, -xSteps do rotate90onR() rotate90onR() rotate90onR() end -- rotate backwards
+    end
 
-    return xSteps + ySteps + zSteps
+    -- Apply Y rotation
+    if ySteps > 0 then
+        for _ = 1, ySteps do rotate90onT() end
+    elseif ySteps < 0 then
+        for _ = 1, -ySteps do rotate90onT() rotate90onT() rotate90onT() end
+    end
+
+    -- Apply Z rotation
+    if zSteps > 0 then
+        for _ = 1, zSteps do rotate90onZ() end
+    elseif zSteps < 0 then
+        for _ = 1, -zSteps do rotate90onZ() rotate90onZ() rotate90onZ() end
+    end
+
+    return math.abs(xSteps) + math.abs(ySteps) + math.abs(zSteps)
 end
 
 local function buildmode()
