@@ -1,6 +1,3 @@
-i have tried fixing the rotation of this script and you got it atleast consistend and i want you to now make it fully correct
-
-
 local Players = game:GetService("Players")
 local player = game.Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
